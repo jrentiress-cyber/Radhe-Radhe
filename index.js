@@ -1,5 +1,5 @@
 const { Client, GatewayIntentBits } = require('discord.js');
-const { joinVoiceChannel } = require('@discordjs/voice');
+const { joinVoiceChannel, createAudioPlayer, createAudioResource } = require('@discordjs/voice');
 const express = require('express');
 
 const app = express();
@@ -29,5 +29,19 @@ client.on('ready', () => {
         console.log("Joined VC successfully!");
     }
 });
+client.on('voiceStateUpdate', async (oldState, newState) => {
+    if (!oldState.channelId && newState.channelId && !newState.member.user.bot) {
+        const player = createAudioPlayer();
+       const resource = createAudioResource('./radhe.mp3');
 
+        const connection = joinVoiceChannel({
+            channelId: newState.channelId,
+            guildId: newState.guild.id,
+            adapterCreator: newState.guild.voiceAdapterCreator,
+        });
+
+        connection.subscribe(player);
+        player.play(resource);
+    }
+});
 client.login(process.env.TOKEN);
