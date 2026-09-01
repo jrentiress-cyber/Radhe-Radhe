@@ -45,19 +45,20 @@ client.once('ready', () => {
 });
 
 client.on('voiceStateUpdate', (oldState, newState) => {
+    // Agar user bot hai ya member nahi hai toh ignore karo
     if (!newState.member || newState.member.user.bot) return;
 
-    const channelId = process.env.CHANNEL_ID;
-    const guildId = process.env.GUILD_ID;
+    const targetChannelId = process.env.CHANNEL_ID;
 
-    if (newState.guild.id === guildId && newState.channelId === channelId) {
-        if (!oldState.channelId || oldState.channelId !== channelId) {
+    // Check karo ki user target channel ke andar aaya hai ya nahi
+    if (newState.channelId === targetChannelId) {
+        // Agar user pehle ushi channel me nahi tha ( matlab naya entry hai)
+        if (oldState.channelId !== targetChannelId) {
             if (globalConnection) {
                 try {
                     const player = createAudioPlayer();
                     const audioPath = path.join(__dirname, 'radhe.mp3');
                     
-                    // Stream ke through audio resource pass karna render par 100% kaam karta hai
                     const resource = createAudioResource(createReadStream(audioPath), {
                         inputType: StreamType.Arbitrary
                     });
