@@ -3,9 +3,7 @@ const { joinVoiceChannel, createAudioPlayer, createAudioResource, StreamType } =
 const express = require('express');
 const path = require('path');
 const ffmpegPath = require('ffmpeg-static');
-const { createReadStream } = require('fs');
-
-process.env.FFMPEG_PATH = ffmpegPath;
+const cp = require('child_process');
 
 const app = express();
 app.get('/', (req, res) => res.send('Bot is Alive 24/7!'));
@@ -20,7 +18,7 @@ const client = new Client({
 
 let globalConnection = null;
 
-client.once('ready', () => {
+client.once('clientReady', () => {
     console.log(`Logged in as ${client.user.tag}!`);
 
     const channelId = process.env.CHANNEL_ID;
@@ -56,12 +54,19 @@ client.on('voiceStateUpdate', (oldState, newState) => {
                     const player = createAudioPlayer();
                     const audioPath = path.join(__dirname, 'radhe.mp3');
                     
-                    const resource = createAudioResource(createReadStream(audioPath), {
-                        inputType: StreamType.Arbitrary,
-                        inlineVolume: true
+                    // FFmpeg process ke zariye audio stream generate karna Render par 100% fail-proof hai
+                    const ffmpegProcess = cp.spawn(ffmpegPath, [
+                        '-i', audioPath,
+                        '-acodec', 'libopus',
+                        '-f', 'opus',
+                        '-ar', '48000',
+                        '-ac', '2',
+                        'pipe:1'
+                    ], { stdio: ['pipe', 'pipe', 'ignore'] });
+
+                    const resource = createAudioResource(ffmpegProcess.stdout, {
+                        inputType: StreamType.Opus
                     });
-                    
-                    resource.volume.setVolume(1.0);
 
                     globalConnection.subscribe(player);
                     player.play(resource);
@@ -70,6 +75,10 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 
                     player.on('error', (error) => {
                         console.error('Audio Player Error:', error.message);
+                    });
+
+                    ffmpegProcess.on('error', (err) => {
+                        console.error('FFmpeg Process Error:', err);
                     });
 
                 } catch (err) {
