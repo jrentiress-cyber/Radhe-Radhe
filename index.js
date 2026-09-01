@@ -15,7 +15,7 @@ const client = new Client({
 
 client.on('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
-    
+
     // Auto Join Voice Channel
     const guild = client.guilds.cache.get(process.env.GUILD_ID);
     if (guild) {
@@ -29,17 +29,17 @@ client.on('ready', () => {
         console.log("Joined VC successfully!");
     }
 });
+
 client.on('voiceStateUpdate', async (oldState, newState) => {
     // Check: Agar user (bot nahi) VC me aaya hai
     if (newState.channelId && !newState.member.user.bot) {
-        
-        // Agar user ne koi naya VC channel join ya switch kiya hai
         if (oldState.channelId !== newState.channelId) {
-            
             const connection = joinVoiceChannel({
                 channelId: newState.channelId,
                 guildId: newState.guild.id,
                 adapterCreator: newState.guild.voiceAdapterCreator,
+                selfDeaf: false,
+                selfMute: false
             });
 
             const player = createAudioPlayer();
@@ -50,4 +50,5 @@ client.on('voiceStateUpdate', async (oldState, newState) => {
         }
     }
 });
+
 client.login(process.env.TOKEN);
