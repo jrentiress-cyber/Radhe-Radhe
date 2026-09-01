@@ -1,5 +1,5 @@
 const { Client, GatewayIntentBits } = require('discord.js');
-const { joinVoiceChannel, createAudioPlayer, createAudioResource } = require('@discordjs/voice');
+const { joinVoiceChannel } = require('@discordjs/voice');
 const express = require('express');
 
 const app = express();
@@ -16,43 +16,28 @@ const client = new Client({
 client.once('ready', () => {
     console.log(`Logged in as ${client.user.tag}!`);
 
-    const guild = client.guilds.cache.get(process.env.GUILD_ID);
-    if (guild) {
-        const channel = guild.channels.cache.get(process.env.CHANNEL_ID);
-        if (channel) {
-            joinVoiceChannel({
-                channelId: channel.id,
-                guildId: guild.id,
-                adapterCreator: guild.voiceAdapterCreator,
-                selfDeaf: false,
-                selfMute: false
-            });
-            console.log("Successfully joined the target Voice Channel!");
-        }
-    }
-});
+    const channelId = process.env.CHANNEL_ID;
+    const guildId = process.env.GUILD_ID;
 
-client.on('voiceStateUpdate', (oldState, newState) => {
-    try {
-        if (newState.channelId && newState.member && !newState.member.user.bot) {
-            if (oldState.channelId !== newState.channelId) {
-                const connection = joinVoiceChannel({
-                    channelId: newState.channelId,
-                    guildId: newState.guild.id,
-                    adapterCreator: newState.guild.voiceAdapterCreator,
+    if (channelId && guildId) {
+        const guild = client.guilds.cache.get(guildId);
+        if (guild) {
+            const channel = guild.channels.cache.get(channelId);
+            if (channel) {
+                joinVoiceChannel({
+                    channelId: channel.id,
+                    guildId: guild.id,
+                    adapterCreator: guild.voiceAdapterCreator,
                     selfDeaf: false,
                     selfMute: false
                 });
-
-                const player = createAudioPlayer();
-                const resource = createAudioResource('./radhe.mp3');
-
-                connection.subscribe(player);
-                player.play(resource);
+                console.log("Successfully connected to Voice Channel and staying stable!");
+            } else {
+                console.log("Could not find the Voice Channel ID!");
             }
+        } else {
+            console.log("Could not find the Guild ID!");
         }
-    } catch (error) {
-        console.error("Error playing audio:", error);
     }
 });
 
