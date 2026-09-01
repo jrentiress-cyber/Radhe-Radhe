@@ -3,8 +3,7 @@ const { joinVoiceChannel, createAudioPlayer, createAudioResource, StreamType } =
 const express = require('express');
 const path = require('path');
 const ffmpegPath = require('ffmpeg-static');
-
-process.env.FFMPEG_PATH = ffmpegPath;
+const cp = require('child_process');
 
 const app = express();
 app.get('/', (req, res) => res.send('Bot is Alive 24/7!'));
@@ -55,8 +54,19 @@ client.on('voiceStateUpdate', (oldState, newState) => {
                     const player = createAudioPlayer();
                     const audioPath = path.join(__dirname, 'radhe.mp3');
                     
-                    const resource = createAudioResource(audioPath, {
-                        inputType: StreamType?.Arbitrary || 0
+                    // Render ke liye sabse stable PCM raw stream conversion
+                    const ffmpegProcess = cp.spawn(ffmpegPath, [
+                        '-i', audioPath,
+                        '-analyzeduration', '0',
+                        '-loglevel', '0',
+                        '-f', 's16le',
+                        '-ar', '48000',
+                        '-ac', '2',
+                        'pipe:1'
+                    ], { stdio: ['pipe', 'pipe', 'ignore'] });
+
+                    const resource = createAudioResource(ffmpegProcess.stdout, {
+                        inputType: StreamType.Raw
                     });
 
                     globalConnection.subscribe(player);
@@ -66,6 +76,10 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 
                     player.on('error', (error) => {
                         console.error('Audio Player Error:', error.message);
+                    });
+
+                    ffmpegProcess.on('error', (err) => {
+                        console.error('FFmpeg Error:', err);
                     });
 
                 } catch (err) {
