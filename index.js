@@ -2,6 +2,9 @@ const { Client, GatewayIntentBits } = require('discord.js');
 const { joinVoiceChannel, createAudioPlayer, createAudioResource } = require('@discordjs/voice');
 const express = require('express');
 const path = require('path');
+const ffmpeg = require('ffmpeg-static');
+
+process.env.FFMPEG_PATH = ffmpeg;
 
 const app = express();
 app.get('/', (req, res) => res.send('Bot is Alive 24/7!'));
