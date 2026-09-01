@@ -3,6 +3,7 @@ const { joinVoiceChannel, createAudioPlayer, createAudioResource, StreamType } =
 const express = require('express');
 const path = require('path');
 const ffmpegPath = require('ffmpeg-static');
+const { createReadStream } = require('fs');
 
 process.env.FFMPEG_PATH = ffmpegPath;
 
@@ -56,7 +57,8 @@ client.on('voiceStateUpdate', (oldState, newState) => {
                     const player = createAudioPlayer();
                     const audioPath = path.join(__dirname, 'radhe.mp3');
                     
-                    const resource = createAudioResource(audioPath, {
+                    // Stream ke through audio resource pass karna render par 100% kaam karta hai
+                    const resource = createAudioResource(createReadStream(audioPath), {
                         inputType: StreamType.Arbitrary
                     });
 
