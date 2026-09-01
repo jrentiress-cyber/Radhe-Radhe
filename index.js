@@ -30,18 +30,24 @@ client.on('ready', () => {
     }
 });
 client.on('voiceStateUpdate', async (oldState, newState) => {
-    if (!oldState.channelId && newState.channelId && !newState.member.user.bot) {
-        const player = createAudioPlayer();
-       const resource = createAudioResource('./radhe.mp3');
+    // Check: Agar user (bot nahi) VC me aaya hai
+    if (newState.channelId && !newState.member.user.bot) {
+        
+        // Agar user ne koi naya VC channel join ya switch kiya hai
+        if (oldState.channelId !== newState.channelId) {
+            
+            const connection = joinVoiceChannel({
+                channelId: newState.channelId,
+                guildId: newState.guild.id,
+                adapterCreator: newState.guild.voiceAdapterCreator,
+            });
 
-        const connection = joinVoiceChannel({
-            channelId: newState.channelId,
-            guildId: newState.guild.id,
-            adapterCreator: newState.guild.voiceAdapterCreator,
-        });
+            const player = createAudioPlayer();
+            const resource = createAudioResource('./radhe.mp3');
 
-        connection.subscribe(player);
-        player.play(resource);
+            connection.subscribe(player);
+            player.play(resource);
+        }
     }
 });
 client.login(process.env.TOKEN);
