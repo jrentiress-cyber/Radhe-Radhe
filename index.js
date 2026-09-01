@@ -4,6 +4,8 @@ const express = require('express');
 const path = require('path');
 const ffmpegPath = require('ffmpeg-static');
 
+process.env.FFMPEG_PATH = ffmpegPath;
+
 const app = express();
 app.get('/', (req, res) => res.send('Bot is Alive 24/7!'));
 app.listen(3000, () => console.log('Server is running on port 3000!'));
