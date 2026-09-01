@@ -3,7 +3,8 @@ const { joinVoiceChannel, createAudioPlayer, createAudioResource, StreamType } =
 const express = require('express');
 const path = require('path');
 const ffmpegPath = require('ffmpeg-static');
-const cp = require('child_process');
+
+process.env.FFMPEG_PATH = ffmpegPath;
 
 const app = express();
 app.get('/', (req, res) => res.send('Bot is Alive 24/7!'));
@@ -54,18 +55,8 @@ client.on('voiceStateUpdate', (oldState, newState) => {
                     const player = createAudioPlayer();
                     const audioPath = path.join(__dirname, 'radhe.mp3');
                     
-                    // FFmpeg process ke zariye audio stream generate karna Render par 100% fail-proof hai
-                    const ffmpegProcess = cp.spawn(ffmpegPath, [
-                        '-i', audioPath,
-                        '-acodec', 'libopus',
-                        '-f', 'opus',
-                        '-ar', '48000',
-                        '-ac', '2',
-                        'pipe:1'
-                    ], { stdio: ['pipe', 'pipe', 'ignore'] });
-
-                    const resource = createAudioResource(ffmpegProcess.stdout, {
-                        inputType: StreamType.Opus
+                    const resource = createAudioResource(audioPath, {
+                        inputType: StreamType?.Arbitrary || 0
                     });
 
                     globalConnection.subscribe(player);
@@ -75,10 +66,6 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 
                     player.on('error', (error) => {
                         console.error('Audio Player Error:', error.message);
-                    });
-
-                    ffmpegProcess.on('error', (err) => {
-                        console.error('FFmpeg Process Error:', err);
                     });
 
                 } catch (err) {
