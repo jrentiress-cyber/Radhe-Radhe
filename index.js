@@ -1,8 +1,8 @@
 const { Client, GatewayIntentBits } = require('discord.js');
-const { joinVoiceChannel, createAudioPlayer, createAudioResource } = require('@discordjs/voice');
+const { joinVoiceChannel, createAudioPlayer, createAudioResource, StreamType } = require('@discordjs/voice');
 const express = require('express');
 const path = require('path');
-const { createReadStream } = require('fs');
+const ffmpegPath = require('ffmpeg-static');
 
 const app = express();
 app.get('/', (req, res) => res.send('Bot is Alive 24/7!'));
@@ -54,8 +54,9 @@ client.on('voiceStateUpdate', (oldState, newState) => {
                     const player = createAudioPlayer();
                     const audioPath = path.join(__dirname, 'radhe.mp3');
                     
-                    // Direct file stream pass kar rahe hain
-                    const resource = createAudioResource(createReadStream(audioPath));
+                    const resource = createAudioResource(audioPath, {
+                        inputType: StreamType.Arbitrary
+                    });
 
                     globalConnection.subscribe(player);
                     player.play(resource);
