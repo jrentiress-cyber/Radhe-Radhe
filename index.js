@@ -13,13 +13,21 @@ const client = new Client({
     intents: [
         GatewayIntentBits.Guilds,
         GatewayIntentBits.GuildVoiceStates
-    ]
+    ],
+    presence: {
+        status: 'idle'
+    }
 });
 
 let globalConnection = null;
 
 client.once('clientReady', () => {
     console.log(`Logged in as ${client.user.tag}!`);
+    
+    // Ensure status remains Idle on startup
+    if (client.user) {
+        client.user.setStatus('idle');
+    }
 
     const channelId = process.env.CHANNEL_ID;
     const guildId = process.env.GUILD_ID;
@@ -53,7 +61,7 @@ client.on('voiceStateUpdate', (oldState, newState) => {
                 try {
                     const player = createAudioPlayer();
                     const audioPath = path.join(__dirname, 'radhe.mp3');
-                    
+
                     // Render ke liye sabse stable PCM raw stream conversion
                     const ffmpegProcess = cp.spawn(ffmpegPath, [
                         '-i', audioPath,
@@ -71,7 +79,7 @@ client.on('voiceStateUpdate', (oldState, newState) => {
 
                     globalConnection.subscribe(player);
                     player.play(resource);
-                    
+
                     console.log("Member joined, playing Radhe Radhe!");
 
                     player.on('error', (error) => {
